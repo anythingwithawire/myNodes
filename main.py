@@ -1,3 +1,4 @@
+import math
 import sys
 from random import random
 
@@ -13,6 +14,7 @@ import uuid
 # import QtGui
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PySide2.QtGui import QMatrix
 
 data = [
     {"label": "constant", "nodes": [{"type": "void", "output": [], "input": []}]},
@@ -513,9 +515,9 @@ class Edge(QGraphicsPathItem):
         QGraphicsPathItem.__init__(self, parent)
         super().__init__(parent)
 
-        self.lineColor = QColor(200, 20, 200)
+        self.lineColor = QColor(100, 50, 100)
         self.removalColor = Qt.red
-        self.thickness = 1
+        self.thickness = 0.4
 
         self.source = None
         self.target = None
@@ -587,7 +589,7 @@ class Edge(QGraphicsPathItem):
         self.sourcePos = self.source.scenePos()
         self.wayPointsPos = self.wayPoints[0].scenePos()
         self.targetPos = self.target.scenePos()
-        self.lineColor = QColor(0, 200, 200)
+        self.lineColor = QColor(80, 100, 200)
         self.edgeType = 'waypoints'
 
         return
@@ -603,12 +605,18 @@ class Edge(QGraphicsPathItem):
                 self.target.boundingRect().center())
 
         path = QPainterPath()
-        myFont = QFont()
-        myFont.setFamily("Helvetica")
+
+        myFont = QFont('Arial')
+        myFont.setFixedPitch(True)
+        myFont.setStyleStrategy(QFont.PreferAntialias)
+        myFont.setStyleHint(QFont.Serif)
+
         # path.addPath(Cable.path)
 
-        path.moveTo(self.sourcePos)
+        #Pen.rotationAngle = degrees
+
         if self.wayPoints:
+            path.moveTo(self.sourcePos)
             for w in self.wayPoints:
                 ww = w.scenePos()
                 wPos = ww
@@ -616,7 +624,21 @@ class Edge(QGraphicsPathItem):
                 path.addText(self.mid(self.sourcePos, wPos), myFont, self.edgeType)
                 path.addText(self.mid(wPos, self.targetPos), myFont, self.edgeType)
                 path.moveTo(wPos)
-        path.lineTo(self.targetPos)
+            path.lineTo(self.targetPos)
+        else:
+            path.moveTo(self.sourcePos)
+            path.lineTo(self.targetPos)
+            angle = QLineF(self.sourcePos, self.targetPos).angle()
+
+        t = QGraphicsSimpleTextItem()
+        t.setRotation(-angle)
+        t.setText('AAAAAAA')
+        t.setPos(self.mid(self.sourcePos, self.targetPos))
+        self.scene().addItem(t)
+
+
+
+
 
         dx = self.targetPos.x() - self.sourcePos.x()
         dy = self.targetPos.y() - self.sourcePos.y()
@@ -627,7 +649,8 @@ class Edge(QGraphicsPathItem):
                         self.sourcePos.y() + dy * self.curv4)
         # path.lineTo(ctrl1)
         # path.lineTo(ctrl2)
-        path.lineTo(self.targetPos)
+        #path.lineTo(self.targetPos)
+
 
 
         '''if ViewClass.xCable and ViewClass.xCable[0] and ViewClass.xCable[0][1]:
@@ -639,9 +662,16 @@ class Edge(QGraphicsPathItem):
 
     def mid(self, a, b):
         x = (a.x()+b.x())/2
-        y = (a.y()+b.y())/2
+        y = ((a.y()+b.y())/2) - 2
         return QPointF(x, y)
 
+    def angle(self, a, b):
+        math.arcsin()
+
+    def boundingRect(self):
+        a = self.sourcePos
+        b = self.targetPos
+        return QRectF(min(a.x(), b.x()),min(a.y(), b.y()),max(a.x(), b.x()), max(a.y(), b.y()))
 
     def paint(self, painter, option, widget):
         """Paint Edge color depending on modifier key pressed or not."""
