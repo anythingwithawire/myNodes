@@ -1,0 +1,94 @@
+[
+    {
+        "'attributes": {},
+        "connection": [],
+        "input": [
+            {
+                "type": "",
+                "uid": "4c006da4-a2e4-47c8-9c3e-24c331f0859c"
+            },
+            {
+                "type": "",
+                "uid": "a0c00aee-7b10-4b51-91bc-8816f2fef92b"
+            },
+            {
+                "type": "",
+                "uid": "d78a9d77-6017-4cb6-8641-6ab1548052ee"
+            },
+            {
+                "type": "",
+                "uid": "268a7251-8959-4791-8b37-145f60f5662d"
+            }
+        ],
+        "output": [
+            {
+                "type": "",
+                "uid": "78278ec5-7ef8-40dd-9453-d5fcf59a2e1f"
+            },
+            {
+                "type": "",
+                "uid": "2f9a4bff-e6a8-4b00-8e3e-c7334439372d"
+            },
+            {
+                "type": "",
+                "uid": "e96d84c2-34b2-441b-a428-92d193713f44"
+            },
+            {
+                "type": "",
+                "uid": "fc558168-d675-4869-8be7-a641cfc3cfac"
+            }
+        ],
+        "pos": {
+            "x": -430.0,
+            "y": -538.0
+        },
+        "type": "int",
+        "value": null
+    },
+    {
+        "'attributes": {},
+        "connection": [],
+        "input": [
+            {
+                "type": "",
+                "uid": "4c006da4-a2e4-47c8-9c3e-24c331f0859c"
+            },
+            {
+                "type": "",
+                "uid": "a0c00aee-7b10-4b51-91bc-8816f2fef92b"
+            },
+            {
+                "type": "",
+                "uid": "d78a9d77-6017-4cb6-8641-6ab1548052ee"
+            },
+            {
+                "type": "",
+                "uid": "268a7251-8959-4791-8b37-145f60f5662d"
+            }
+        ],
+        "output": [
+            {
+                "type": "",
+                "uid": "78278ec5-7ef8-40dd-9453-d5fcf59a2e1f"
+            },
+            {
+                "type": "",
+                "uid": "2f9a4bff-e6a8-4b00-8e3e-c7334439372d"
+            },
+            {
+                "type": "",
+                "uid": "e96d84c2-34b2-441b-a428-92d193713f44"
+            },
+            {
+                "type": "",
+                "uid": "fc558168-d675-4869-8be7-a641cfc3cfac"
+            }
+        ],
+        "pos": {
+            "x": -430.0,
+            "y": -538.0
+        },
+        "type": "int",
+        "value": null
+    }
+]
