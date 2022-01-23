@@ -355,7 +355,6 @@ class QNodesEditor(QObject):
 
 class SceneClass(QGraphicsScene):
     grid = 30
-
     # myScene = None
 
     def __init__(self, parent=None):
