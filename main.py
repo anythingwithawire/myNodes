@@ -26,6 +26,8 @@ class WindowClass(QMainWindow):
         QMainWindow.__init__(self, parent)
         self.view = ViewClass()
         self.setCentralWidget(self.view)
+
+
         self.nodesEditor = QNodesEditor(self)
         self.nodesEditor.install(self.view.s)
 
@@ -93,15 +95,15 @@ class ViewClass(QGraphicsView):
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
         self.s = SceneClass()
         self.setScene(self.s)
         self.setRenderHint(QPainter.Antialiasing)
+
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.viewContextMenu)
         self.initAction()
 
-        self.box = Box(0, 0, 50, 50)
-        self.show()
 
     def eventFilter(self, source, event):
         if (source == self.viewport() and
@@ -395,7 +397,6 @@ class SceneClass(QGraphicsScene):
                 e = Edge()
                 e.addEdge3(self.selectedItems()[0], self.selectedItems()[1], self.selectedItems()[2])
                 self.addItem(e)
-
         QGraphicsScene.mousePressEvent(self, event)
 
     def addNode(self, pos, typenode):
@@ -861,7 +862,7 @@ class Node(QGraphicsObject):
         #       QGraphicsRectItem.__init__(self, rect, parent)
         QGraphicsObject.__init__(self, parent)
         self.isSelected = False
-        # self.label = label
+        self.label = label
         self.inputc = []
         for i in inputc:
             print(i)
@@ -977,10 +978,10 @@ class Node(QGraphicsObject):
 
     def paint(self, painter, option, widget):
         if self.isSelected:
-            painter.setBrush(Qt.darkGray)
+            painter.setBrush(Qt.darkGreen)
             painter.setPen(Qt.blue)
         else:
-            painter.setBrush(Qt.lightGray)
+            painter.setBrush(Qt.darkGray)
             painter.setPen(Qt.blue)
 
         painter.drawRect(self.boundingRect())
@@ -995,13 +996,16 @@ class Node(QGraphicsObject):
         return QGraphicsItem.itemChange(self, change, value)
 
     def mousePressEvent(self, event):
-        self.isSelected = True
+        if self.isSelected:
+            self.isSelected = False
+        else:
+            self.isSelected = True
         self.update()
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        self.isSelected = False
-        self.update()
+        #self.isSelected = False
+        #self.update()
         QGraphicsItem.mouseReleaseEvent(self, event)
 
     def setValue(self, value):
