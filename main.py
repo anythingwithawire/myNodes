@@ -7,9 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import json
 import uuid
-
-#
-# TODO load and connection...
+# from SizeGripItem import SizeGripItem
 
 # import QtGui
 from PyQt5 import QtCore
@@ -19,7 +17,8 @@ from PySide2.QtGui import QMatrix
 data = [
     {"label": "constant", "nodes": [{"type": "void", "output": [], "input": []}]},
     {"label": "operation",
-     "nodes": [{"type": "add", "output": [{"type": "void"}], "input": [{"type": "int"}, {"type": "int"}]}]}
+     "nodes": [{"type": "add", "output": [{"type": "void"}], "input": [{"type": "int"}, {"type": "int"}]}]},
+    {"label": "Group", "nodes": [{"type": "group", "output": [], "input": []}]}
 ]
 
 
@@ -28,7 +27,6 @@ class WindowClass(QMainWindow):
         QMainWindow.__init__(self, parent)
         self.view = ViewClass()
         self.setCentralWidget(self.view)
-
 
         self.nodesEditor = QNodesEditor(self)
         self.nodesEditor.install(self.view.s)
@@ -88,7 +86,9 @@ class ViewClass(QGraphicsView):
 
     def __init__(self, parent=None):
         QGraphicsView.__init__(self, parent)
-
+        super(ViewClass, self).__init__(parent)
+        self.mousePos = None
+        # self.setCacheMode(QGraphicsView.CacheBackground)
         ViewClass.viewport(self).installEventFilter(self)
 
         self.j = None
@@ -97,15 +97,15 @@ class ViewClass(QGraphicsView):
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.s = SceneClass()
+        myScene = self.s
         self.setScene(self.s)
         self.setRenderHint(QPainter.Antialiasing)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.viewContextMenu)
         self.initAction()
-
 
     def eventFilter(self, source, event):
         if (source == self.viewport() and
@@ -117,8 +117,8 @@ class ViewClass(QGraphicsView):
             self.scale(scale, scale)
             # do not propagate the event to the scroll area scrollbars
             return True
-        elif event.type() == QtCore.QEvent.GraphicsSceneMousePress:
-            pass
+        elif event.type() == QEvent.GraphicsSceneMouseMove:
+            self.mousePos = event.scenePos()
             # ...
         return super().eventFilter(source, event)
 
@@ -133,7 +133,7 @@ class ViewClass(QGraphicsView):
                 action.triggered.connect(self.addNode)
                 self.menuaction.append(action)
 
-        action = MenuAction(u"special", self)
+        action = MenuAction(u"cable node", self)
         action.setTypeNode(None)
         # self.action_addNode = QAction(u"Add Node", self)
         action.triggered.connect(self.special)
@@ -141,7 +141,7 @@ class ViewClass(QGraphicsView):
 
         action = MenuAction(u"cable", self)
         # action.self =self
-        # action_makeCable = QAction(u"makeCable", self)
+        # action_makeCable = QAction(u"Group", self)
         action.triggered.connect(self.special2)
         self.menuaction.append(action)
 
@@ -151,17 +151,44 @@ class ViewClass(QGraphicsView):
 
     def special(self):
         print("special")
-        self.j = JustConnector.addConnector(self)
+        self.j = ViewClass.addConnector(self, 0, 0)
 
     def special2(self):
-        print("special2")
-        self.k = JustConnector.makeCable(self)
+        print("group nodes")
+        self.g = QGraphicsItemGroup()
+        for item in self.scene().items():
+            if item.isSelected:
+                item.setGroup(self.g)
 
     def viewContextMenu(self, p):
         self.menu = QMenu(self)
         for a in self.menuaction:
             self.menu.addAction(a)
         self.menu.exec_(self.mapToGlobal(p))
+
+    def addConnector(self, x, y):
+        ic = QGraphicsEllipseItem(-5, -5, 10, 10, None)
+        ic.uuid = str(random() * 98787878)
+        ic.setBrush(Qt.magenta)
+        ic.setPen(Qt.blue)
+        ic.setBrush(QBrush(Qt.darkYellow))
+        ic.setPos(x, y)
+
+        ic.setSelected(True)
+        ic.setFlags(QGraphicsItem.ItemIsMovable |
+                    QGraphicsItem.ItemIsSelectable |
+                    QGraphicsItem.ItemSendsGeometryChanges | QGraphicsItem.ItemIsFocusable | QGraphicsItem.ItemIgnoresParentOpacity | QGraphicsItem.ItemAcceptsInputMethod)
+        # self.setCacheMode(QGraphicsItem.ItemCoordinateCache)
+
+        ic.setZValue(101)
+
+        ViewClass.xConnector.append(ic)
+        self.s.addItem(ic)
+
+        # self.inputcj.append(ic)
+        # label = QGraphicsTextItem(("bbb"), self)
+        # label.setPos(10, 10)
+        return ic
 
 
 class JustConnector(QGraphicsItem):
@@ -230,33 +257,13 @@ class JustConnector(QGraphicsItem):
                     print("Cable")
                     cable = [i1, i2]
                     ViewClass.xCable.append(cable)
-                    #c = Cable()
-                    #c.addCable(i1, i2)
+                    # c = Cable()
+                    # c.addCable(i1, i2)
                     break
 
     def mousePressEvent(self, event):
         print("=======>>>>", self.isUnderMouse())
         JustConnector.mousePressEvent(self, event)
-
-    def addConnector(self):
-        ic = QGraphicsEllipseItem(-5, -5, 10, 10, None)
-        ic.uuid = str(random() * 98787878)
-        ic.setBrush(Qt.magenta)
-        ic.setPen(Qt.blue)
-        ic.setBrush(QBrush(Qt.darkYellow))
-        ic.setPos(0, 0)
-        ic.setSelected(True)
-        ic.setFlags(QGraphicsItem.ItemIsMovable |
-                    QGraphicsItem.ItemIsSelectable |
-                    QGraphicsItem.ItemSendsGeometryChanges | QGraphicsItem.ItemIsFocusable | QGraphicsItem.ItemIgnoresParentOpacity | QGraphicsItem.ItemAcceptsInputMethod)
-        ic.setZValue(101)
-
-        ViewClass.xConnector.append(ic)
-        self.scene().addItem(ic)
-
-        # self.inputcj.append(ic)
-        # label = QGraphicsTextItem(("bbb"), self)
-        # label.setPos(10, 10)
 
     def boundingRect(self):
         return QRectF(-5, -5, 10, 10)
@@ -271,6 +278,7 @@ class JustConnector(QGraphicsItem):
 class QNodesEditor(QObject):
     def __init__(self, parent):
         super(QNodesEditor, self).__init__(parent)
+        self.mousePos = None
         self.connection = None
         self.edgeCreated = None
         self.scene = None
@@ -342,6 +350,7 @@ class QNodesEditor(QObject):
                 return super(QNodesEditor, self).eventFilter(object, event)
         elif event.type() == QEvent.GraphicsSceneMouseMove:
             print(self.itemAt(event.scenePos()), event.scenePos())
+            self.mousePos = event.scenePos()
             pass
         elif event.type() == QEvent.GraphicsSceneMouseRelease:  # EDGE ACTUALLY CREATED HERE
             # if self.connection and event.button() == Qt.LeftButton:
@@ -359,11 +368,14 @@ class QNodesEditor(QObject):
 
 class SceneClass(QGraphicsScene):
     grid = 30
+
     # myScene = None
 
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, QRectF(-1000, -1000, 2000, 2000), parent)
         x = 1
+        # self.setSortCacheEnabled(True)
+        self.setItemIndexMethod(QGraphicsScene.NoIndex)
 
     def getScene(self):
         return self
@@ -407,6 +419,10 @@ class SceneClass(QGraphicsScene):
             node = NodeInt(typenode["type"], typenode["input"], typenode["output"])
         elif typenode["type"] == "add":
             node = NodeAdd(typenode["type"], typenode["input"], typenode["output"])
+        elif typenode["type"] == "group":
+            node = NodeAdd(typenode["type"], typenode["input"], typenode["output"])
+            node.setScale(10.0)
+            node.setZValue(-100)
         else:
             node = Node(typenode["type"], typenode["input"], typenode["output"])
 
@@ -415,6 +431,7 @@ class SceneClass(QGraphicsScene):
             node.setPos(pos)
             return node
         return None
+
 
 '''
 class Cable(QGraphicsPathItem):
@@ -507,6 +524,7 @@ class Cable(QGraphicsPathItem):
         self.updatePath()
 '''
 
+
 class Edge(QGraphicsPathItem):
     """A connection between two Knobs."""
     Type = QGraphicsItem.UserType + 1
@@ -515,6 +533,7 @@ class Edge(QGraphicsPathItem):
         QGraphicsPathItem.__init__(self, parent)
         super().__init__(parent)
 
+        self.cable = None
         self.lineColor = QColor(100, 50, 100)
         self.removalColor = Qt.red
         self.thickness = 0.4
@@ -538,8 +557,10 @@ class Edge(QGraphicsPathItem):
 
         self.setAcceptHoverEvents(True)
 
+
     def addEdge(self, source, dest, parent=None):
-        #self.line = QGraphicsLineItem()
+
+        # self.line = QGraphicsLineItem()
         self.source = source
 
         self.target = dest
@@ -550,18 +571,24 @@ class Edge(QGraphicsPathItem):
         self.curv2 = 0.2
         self.curv4 = 0.8
 
-        cable = [source, dest]
-        ViewClass.xCable.append(cable)
+        g = ViewClass()
+        g.addConnector(source.scenePos().x() + 100, source.scenePos().y())
+
+        h = ViewClass()
+        h.addConnector(dest.scenePos().x() - 100, dest.scenePos().y())
+
+        self.cable = [source, g, h, dest]
+        ViewClass.xCable.append(self.cable)
 
         self.sourcePos = self.source.scenePos()
         self.targetPos = self.target.scenePos()
-        self.lineColor = QColor(200, 0,0)
+        self.lineColor = QColor(200, 0, 0)
         self.edgeType = 'cable'
 
         return
 
-    def addEdge3(self, source, waypoint,  dest, parent=None):
-        #self.line = QGraphicsLineItem()
+    def addEdge3(self, source, waypoint, dest, parent=None):
+        # self.line = QGraphicsLineItem()
         self.source = source
         self.wayPoints.append(waypoint)
         print("appending waypoint")
@@ -573,18 +600,44 @@ class Edge(QGraphicsPathItem):
         self.curv2 = 0.2
         self.curv4 = 0.8
 
-        cable = [source, waypoint, dest]
+        self.updatePath()
+
+        cable = [source, self.wayPoints, dest]
         cd = None
         for cb in ViewClass.xCable:
             if cb[0] == source and cb[-1] == dest:
                 cd = cb
-                cable = [cb[0], cb[1], waypoint,cb[-1]]
+                cable = [cb[0], cb[1], waypoint, cb[-1]]
                 self.wayPoints.append(cb[1])
-                #self.wayPoints.append(waypoint)
+                # self.wayPoints.append(waypoint)
                 break
         if cd:
             ViewClass.xCable.remove(cd)
         ViewClass.xCable.append(cable)
+
+        '''justDidDelete = False
+        for n in range(0, pathNum):
+            p = self.path.elementAt(n)
+            if math.fabs(p.x - source.scenePos().x()) < 1.0 and math.fabs(p.y - source.scenePos().y()) < 1.0:
+                print("XXXXXXXXXXXXXXXXXXXXZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
+                #self.path.setElementPositionAt(n, 0.0, 0.0)
+                justDidDelete = True
+            else:
+                if not justDidDelete:
+                    newP.lineTo(100.0,100.0)
+                    newP.moveTo(0.0, 0.0)
+                    newP.setElementPositionAt(n, p.x, p.y)
+                justDidDelete = False
+
+            #if math.fabs(p.x - dest.scenePos().x()) < 1.0 and math.fabs(p.y - dest.scenePos().y()) < 1.0:
+            #    print("XXXXXXXXXXXXXXXXXXXXZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
+            #    self.path.setElementPositionAt(n, 0.0, 0.0)'''
+        self.path.clear()
+        '''for c in ViewClass.xCable:
+            self.path.moveTo(c[0].scenePos().x(), c[0].scenePos().y())
+            for z in range(1, len(c)):
+                self.path.lineTo(c[z].scenePos().x(), c[z].scenePos().y())'''
+        self.updatePath()
 
         self.sourcePos = self.source.scenePos()
         self.wayPointsPos = self.wayPoints[0].scenePos()
@@ -604,7 +657,7 @@ class Edge(QGraphicsPathItem):
             self.targetPos = self.target.mapToScene(
                 self.target.boundingRect().center())
 
-        path = QPainterPath()
+        self.path = QPainterPath()
 
         myFont = QFont('Arial')
         myFont.setFixedPitch(True)
@@ -613,56 +666,43 @@ class Edge(QGraphicsPathItem):
 
         # path.addPath(Cable.path)
 
-        #Pen.rotationAngle = degrees
-
-        if self.wayPoints:
-            path.moveTo(self.sourcePos)
-            for w in self.wayPoints:
-                ww = w.scenePos()
-                wPos = ww
-                path.lineTo(wPos)
-                path.addText(self.mid(self.sourcePos, wPos), myFont, self.edgeType)
-                path.addText(self.mid(wPos, self.targetPos), myFont, self.edgeType)
-                path.moveTo(wPos)
-            path.lineTo(self.targetPos)
-        else:
-            path.moveTo(self.sourcePos)
-            path.lineTo(self.targetPos)
-            angle = QLineF(self.sourcePos, self.targetPos).angle()
-
-        t = QGraphicsSimpleTextItem()
-        t.setRotation(-angle)
+        # Pen.rotationAngle = degrees
+        if self.cable:
+            if len(self.cable) > 2:
+                self.path.moveTo(self.cable[0].scenePos())
+                for w in self.cable:
+                    self.path.lineTo(w.scenePos())
+                    # self.path.addText(self.mid(self.sourcePos, wPos), myFont, self.edgeType)
+                    # self.path.addText(self.mid(wPos, self.targetPos), myFont, self.edgeType)
+                    # self.path.moveTo(wPos)
+            elif len(self.cable == 2):
+                self.path.moveTo(self.sourcePos)
+                self.path.lineTo(self.targetPos)
+                self.path.addText(self.mid(self.sourcePos, self.targetPos), myFont, self.edgeType)
+            '''t = QGraphicsTextItem()
         t.setText('AAAAAAA')
         t.setPos(self.mid(self.sourcePos, self.targetPos))
-        self.scene().addItem(t)
-
-
-
-
-
-        dx = self.targetPos.x() - self.sourcePos.x()
-        dy = self.targetPos.y() - self.sourcePos.y()
-
-        ctrl1 = QPointF(self.sourcePos.x() + dx * self.curv1,
+        t.setRotation(-angle)
+        if t not in self.scene().items():
+            self.scene().addItem(t)'''
+        # dx = self.targetPos.x() - self.sourcePos.x()
+        # dy = self.targetPos.y() - self.sourcePos.y()
+        '''ctrl1 = QPointF(self.sourcePos.x() + dx * self.curv1,
                         self.sourcePos.y() + dy * self.curv2)
         ctrl2 = QPointF(self.sourcePos.x() + dx * self.curv3,
-                        self.sourcePos.y() + dy * self.curv4)
+                        self.sourcePos.y() + dy * self.curv4)'''
         # path.lineTo(ctrl1)
         # path.lineTo(ctrl2)
-        #path.lineTo(self.targetPos)
-
-
-
+        # path.lineTo(self.targetPos)
         '''if ViewClass.xCable and ViewClass.xCable[0] and ViewClass.xCable[0][1]:
             path.moveTo(ViewClass.xCable[0][0].pos())
             path.moveTo(ViewClass.xCable[0][1].pos())
             path.addText((ctrl1.x() + ctrl2.x()) / 2, -5 + (ctrl1.y() + ctrl2.y()) / 2, myFont, "cable")'''
-        self.setPath(path)
-
+        self.setPath(self.path)
 
     def mid(self, a, b):
-        x = (a.x()+b.x())/2
-        y = ((a.y()+b.y())/2) - 2
+        x = (a.x() + b.x()) / 2
+        y = ((a.y() + b.y()) / 2) - 2
         return QPointF(x, y)
 
     def angle(self, a, b):
@@ -671,7 +711,7 @@ class Edge(QGraphicsPathItem):
     def boundingRect(self):
         a = self.sourcePos
         b = self.targetPos
-        return QRectF(min(a.x(), b.x()),min(a.y(), b.y()),max(a.x(), b.x()), max(a.y(), b.y()))
+        return QRectF(min(a.x(), b.x()), min(a.y(), b.y()), max(a.x(), b.x()), max(a.y(), b.y()))
 
     def paint(self, painter, option, widget):
         """Paint Edge color depending on modifier key pressed or not."""
@@ -858,34 +898,6 @@ class Box(QGraphicsRectItem):
         self.update()
 
 
-class Resizer(QGraphicsObject):
-    resizeSignal = pyqtSignal(QPointF)
-
-    def __init__(self, rect):
-        super().__init__()
-
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
-        self.rect = rect
-
-    def boundingRect(self):
-        return self.rect
-
-    def paint(self, painter, option, widget=None):
-        if self.isSelected():
-            pen = QPen()
-            pen.setStyle(Qt.DotLine)
-            painter.setPen(pen)
-        painter.drawEllipse(self.rect)
-
-    def itemChange(self, change, value):
-        if change == QGraphicsItem.ItemPositionChange:
-            if self.isSelected():
-                self.resizeSignal.emit(value - self.pos())
-        return value
-
-
 # class Node(QGraphicsRectItem):
 class Node(QGraphicsObject):
     def __init__(self, label, inputc, outputc, parent=None):
@@ -1023,6 +1035,7 @@ class Node(QGraphicsObject):
         if change == QGraphicsItem.ItemPositionHasChanged:
             for edge in self.edges:
                 edge.adjust()
+
         return QGraphicsItem.itemChange(self, change, value)
 
     def mousePressEvent(self, event):
@@ -1034,8 +1047,8 @@ class Node(QGraphicsObject):
         QGraphicsItem.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        #self.isSelected = False
-        #self.update()
+        # self.isSelected = False
+        # self.update()
         QGraphicsItem.mouseReleaseEvent(self, event)
 
     def setValue(self, value):
